@@ -1,6 +1,7 @@
 package it.travel.travelexplorer.service.weather;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
@@ -8,8 +9,12 @@ import org.springframework.web.client.RestTemplate;
 import com.fasterxml.jackson.databind.JsonNode;
 
 import it.travel.travelexplorer.domain.dto.request.WeatherRequestDto;
+import it.travel.travelexplorer.domain.dto.response.UserResponseDto;
 import it.travel.travelexplorer.domain.dto.response.WeatherResponseDto;
 import it.travel.travelexplorer.domain.util.CountryCodeMapUtil;
+import it.travel.travelexplorer.domain.util.JwtUtil;
+import it.travel.travelexplorer.exception.base.BaseException;
+import it.travel.travelexplorer.service.restservice.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -22,8 +27,20 @@ public class WeatherService {
     private String apiKey;
 
     private final RestTemplate restTemplate;
+    private final UserService userService;
+    private final JwtUtil jwtUtil;
 
-    public WeatherResponseDto getWeatherByCity(WeatherRequestDto weatherRequestDto) {
+    public WeatherResponseDto getWeatherByCity(WeatherRequestDto weatherRequestDto, String token) throws BaseException {
+
+        // Controllo token
+        UserResponseDto userResponseDto = userService.getUserProfile(token);
+
+        String username = jwtUtil.extractUsername(token);
+
+        if (!userResponseDto.getUsername().equalsIgnoreCase(username)) {
+            throw new BaseException("Errore", HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+
         String url = buildWeatherUrl(weatherRequestDto);
 
         log.info("URL formata: {}", url);

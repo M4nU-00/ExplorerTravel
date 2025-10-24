@@ -1,5 +1,7 @@
 package it.travel.travelexplorer.exception.base;
 
+import org.springframework.http.HttpStatus;
+
 import it.travel.travelexplorer.domain.dto.response.ErrorResponseDto;
 import lombok.Getter;
 
@@ -19,6 +21,16 @@ public class BaseException extends Exception {
                 .message(message)
                 .code(code)
                 .detail(detail)
+                .build();
+    }
+
+    public BaseException(String message, HttpStatus httpStatus) {
+        super(message);
+        this.errorCode = httpStatus.value();
+        this.httpStatus = httpStatus.value();
+        this.errorResponse = ErrorResponseDto.builder()
+                .message(message)
+                .code(httpStatus.value())
                 .build();
     }
 
